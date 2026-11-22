@@ -105,6 +105,7 @@ def whistle(t0):
 BPM = 136
 BEAT = 60 / BPM          # noire : majuscule
 E8 = BEAT / 2            # croche : minuscule
+E16 = E8 / 2             # double-croche (quart de temps)
 LOOP_BEATS = 32
 LOOP = LOOP_BEATS * BEAT
 MUSIC_T0 = 0.15
@@ -153,17 +154,28 @@ def build_music():
                 f = fr if k % 2 == 0 else fr * 2
                 add_note(t, E8 * 0.48, f, duty=0.25, vol=0.115)
             # rythme zouk : grosse caisse sur TOUS les demi-temps,
-            # caisse claire sur chaque temps, charley sur les contretemps
+            # caisse claire : frappes 1 et 5 sur les derniers huitiemes des
+            # temps 1 et 3 (anticipation), frappes 2,3,4 et 6,7,8 sur les
+            # quarts de temps (double-croches, contretemps)
             for k8 in range(8):
                 t = base + (bi * 8 + k8) * E8
                 if t >= music_end:
                     break
-                onbeat = k8 % 2 == 0
-                kick(t, vol=0.62 if onbeat else 0.36)
-                if onbeat:
+                kick(t, vol=0.62 if k8 % 2 == 0 else 0.36)
+            SNARE_SLOTS = (2, 5, 6, 7, 10, 13, 14, 15)  # en 16emes de mesure
+            for j, sl in enumerate(SNARE_SLOTS):
+                t = base + (bi * 8) * E8 + sl * E16
+                if t >= music_end:
+                    break
+                if j % 4 == 0:  # frappes 1 et 5 : dernier huitieme du temps
                     noise_hit(t, 0.11, 0.26, decay=0.05, seed=s); s += 1
-                else:
-                    noise_hit(t, 0.03, 0.085, decay=0.018, seed=s); s += 1
+                else:           # quarts de temps (contretemps)
+                    noise_hit(t, 0.045, 0.14, decay=0.028, seed=s); s += 1
+            for h in range(4):  # charley leger sur les contretemps
+                t = base + (bi * 8 + 2 * h + 1) * E8
+                if t >= music_end:
+                    break
+                noise_hit(t, 0.03, 0.085, decay=0.018, seed=s); s += 1
 
 
 def build_sfx():
