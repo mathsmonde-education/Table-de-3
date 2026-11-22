@@ -92,15 +92,20 @@ def draw_operation(dr, i, f):
     return cx, cy
 
 
+PLAYER_SCALE = 3
+BALL_SCALE = 2
+
+
 def draw_player(dr, f, px, py=None, kicking=False):
-    ox = int(px) - 4
-    oy = (py if py is not None else PLAYER_Y) - 5
+    s = PLAYER_SCALE
+    ox = int(px) - 4 * s
+    oy = ((py if py is not None else PLAYER_Y) - 5 * s)
     kick_ph = (f // 3) % 2 if kicking else -1
     for ry, row in enumerate(PLAYER_ROWS):
         for rx, ch in enumerate(row):
             if ch == '.':
                 continue
-            x0, y0 = ox + rx, oy + ry
+            x0, y0 = ox + rx * s, oy + ry * s
             color = PINK
             if ch == 'H':
                 color = (90, 50, 25)
@@ -108,10 +113,11 @@ def draw_player(dr, f, px, py=None, kicking=False):
                 color = LBLUE
             elif ch == 'K':
                 color = (255, 220, 180)
-            dr.rectangle([x0, y0, x0, y0], fill=color)
+            dr.rectangle([x0, y0, x0 + s - 1, y0 + s - 1], fill=color)
     if kicking:
-        lx = ox + (1 if kick_ph == 0 else 6)
-        dr.rectangle([lx, oy + 8, lx + 1, oy + 11], fill=(255, 220, 180))
+        lx = ox + (s if kick_ph == 0 else 6 * s)
+        dr.rectangle([lx, oy + 8 * s, lx + s + 1, oy + 11 * s + s - 1],
+                     fill=(255, 220, 180))
 
 
 PLAYER_ROWS = [
@@ -157,11 +163,12 @@ def draw_keeper(dr, f, i, op):
             r = min(1.0, (f - hit_end) / 9)
             dx = kd["amp1"] * (1 - r)
     kx = int(keeper_base(f) + dx)
-    if abs(dx) > 5:
-        ox, oy = kx - 6, KEEPER_Y - 2
+    ks = 3
+    if abs(dx) > 6:
+        ox, oy = kx - 6 * ks, KEEPER_Y - 2 * ks
         rows = KEEPER_DIVE
     else:
-        ox, oy = kx - 3, KEEPER_Y - 3
+        ox, oy = kx - 3 * ks, KEEPER_Y - 3 * ks
         rows = KEEPER_ROWS
     for ry, row in enumerate(rows):
         for rx, ch in enumerate(row):
@@ -172,8 +179,8 @@ def draw_keeper(dr, f, i, op):
                 color = (60, 40, 15)
             elif ch == 'W':
                 color = WHITE
-            x0, y0 = ox + rx, oy + ry
-            dr.rectangle([x0, y0, x0, y0], fill=color)
+            x0, y0 = ox + rx * ks, oy + ry * ks
+            dr.rectangle([x0, y0, x0 + ks - 1, y0 + ks - 1], fill=color)
     return kx
 
 
@@ -216,14 +223,17 @@ for _ in range(50):
 
 
 def draw_ball(dr, bx, by, f):
-    x0, y0 = int(bx) - 2, int(by) - 2
-    dr.rectangle([x0, y0, x0 + 4, y0 + 4], fill=WHITE)
+    s = BALL_SCALE
+    x0, y0 = int(bx) - 2 * s, int(by) - 2 * s
+    dr.rectangle([x0, y0, x0 + 5 * s - 1, y0 + 5 * s - 1], fill=WHITE)
     ph = (f // 3) % 2
     if ph:
-        dr.rectangle([x0 + 1, y0 + 1, x0 + 2, y0 + 2], fill=(20, 20, 40))
+        dr.rectangle([x0 + s, y0 + s, x0 + 2 * s + 1, y0 + 2 * s + 1],
+                     fill=(20, 20, 40))
     else:
-        dr.rectangle([x0 + 2, y0 + 2, x0 + 2, y0 + 2], fill=(20, 20, 40))
-        dr.rectangle([x0, y0, x0, y0], fill=blend(WHITE, 0.7))
+        dr.rectangle([x0 + 2 * s, y0 + 2 * s, x0 + 2 * s + 1, y0 + 2 * s + 1],
+                     fill=(20, 20, 40))
+        dr.rectangle([x0, y0, x0 + 1, y0 + 1], fill=blend(WHITE, 0.7))
 
 
 def ball_pos(op, phase, k, dur):
@@ -346,25 +356,26 @@ def render_frame(f):
     img = Image.new('RGB', (W, H))
     dr = ImageDraw.Draw(img)
     if f < INTRO:
-        dr.rectangle([0, 0, W - 1, H - 1], fill=DARKBG)
-        for k in range(60):
-            x = (k * 37) % W
-            y = (k * 53 + f * 1.5) % H
-            c = blend([PINK, TURQ, LBLUE, PURPLE][k % 4],
-                      0.4 + 0.4 * math.sin(k + f * 0.15))
-            dr.rectangle([x, y, x, y], fill=c)
-        if f > 8:
+        draw_pitch(dr, f)
+        draw_goal(dr, f)
+        if f > 6:
             col = [PINK, TURQ, LBLUE][f % 3] if f < 14 else TURQ
+            box_w, box_h = 168, 104
+            bx0, by0 = (W - box_w) // 2, 190
+            dr.rectangle([bx0, by0, bx0 + box_w, by0 + box_h],
+                         fill=(12, 10, 46), outline=PURPLE)
             for li, s in enumerate(["TABLE", "DE 3"]):
-                tw = text_w(s, 5)
-                draw_text(dr, (W - tw) // 2, 150 + li * 44, s, col, 5,
+                tw = text_w(s, 3)
+                draw_text(dr, (W - tw) // 2, by0 + 12 + li * 40, s, col, 3,
                           shadow=(114, 9, 183))
         if f > 30 and (f // 10) % 2 == 0:
             s = "PRET ?"
-            draw_text(dr, (W - text_w(s, 2)) // 2, 330, s, PINK, 2,
+            draw_text(dr, (W - text_w(s, 2)) // 2, 320, s, PINK, 2,
                       shadow=(80, 0, 40))
-        py = int(520 - (520 - PLAYER_Y) * smooth(min(1.0, max(0.0, (f - 15) / 15))))
-        draw_player(dr, f, 135, py)
+        py = int(500 - (500 - PLAYER_Y) * smooth(min(1.0, max(0.0, (f - 12) / 16))))
+        draw_player(dr, f, 135, py, kicking=f > 12)
+        draw_ball(dr, 135, py + 16 * PLAYER_SCALE - 8, f)
+        draw_keeper(dr, f, 0, OPS[0])
         draw_hud(dr, f)
         return img
 
