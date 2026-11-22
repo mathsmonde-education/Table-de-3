@@ -9,7 +9,8 @@ son d'erreur (NON !), puis tir reussi. Finale : CHAMPION, coupe doree,
 feux d'artifice et confettis. Le bandeau **MATHS MONDE** est affiche en
 permanence. Couleurs : #F72585, #7209B7, #3A0CA3, #4361EE, #4CC9F0.
 
-Musique 8-bit a 136 BPM (melodie carree en Mi mineur, basse rebond, batterie)
+Musique 8-bit a 136 BPM : melodie carree sur partition 8 mesures (Mib5-Si5-Sol#5 ; mib6/si6...
+accordee en Sol# mineur - basse rebond G#2/C#3/D#3, batterie 4/4)
 + effets : sifflet, frappe, buzz d'erreur, jingle GOAL + foule, fanfare.
 
 ## Contenu du depot
