@@ -102,60 +102,80 @@ def whistle(t0):
     buf[i0:i1] += sig * warble * env * 0.25
 
 
-E8 = 60 / 136 / 2
-BAR = E8 * 8
+BPM = 136
+BEAT = 60 / BPM          # noire : majuscule
+E8 = BEAT / 2            # croche : minuscule
+E16 = E8 / 2             # double-croche (quart de temps)
+LOOP_BEATS = 32
+LOOP = LOOP_BEATS * BEAT
 MUSIC_T0 = 0.15
-MEL_A = [
-    ['E5', 'E5', 'G5', 'E5', 'A5', 'G5', 'E5', 'D5'],
-    ['E5', None, 'B5', None, 'A5', 'G5', 'A5', None],
-    ['C6', 'B5', 'A5', 'B5', 'G5', 'A5', 'B5', None],
-    ['D6', 'B5', 'A5', 'G5', 'A5', 'G5', 'E5', None],
+
+# Partition de l'utilisateur (Majuscule = noire, Minuscule = croche) :
+# MIB5 SI5 SOL#5 mib6 si6 mib6 si6 mib6 si6 (+2 temps de silence)
+# MIB5 SI5 SOL#5 mib6 si6 mib6 si6 mi6 mib6 (+2 temps)
+# MIB5 SI5 SOL#5 (+1) SI5 (+1) MIB5 (+1 temps et demi)
+# do#5 si5 do#5 (+1) mib6 si6 mib6 si6 mi6 mib6 (+2 temps)
+MELODY = [
+    (0.0, 'D#6', 1), (1.0, 'B5', 1), (2.0, 'G#5', 1),
+    (3.0, 'D#6', .5), (3.5, 'B6', .5), (4.0, 'D#6', .5), (4.5, 'B6', .5),
+    (5.0, 'D#6', .5), (5.5, 'B6', .5),
+    (8.0, 'D#6', 1), (9.0, 'B5', 1), (10.0, 'G#5', 1),
+    (11.0, 'D#6', .5), (11.5, 'B6', .5), (12.0, 'D#6', .5), (12.5, 'B6', .5),
+    (13.0, 'E6', .5), (13.5, 'D#6', .5),
+    (16.0, 'D#6', 1), (17.0, 'B5', 1), (18.0, 'G#5', 1),
+    (20.0, 'B5', 1), (22.0, 'D#6', 1),
+    (24.5, 'C#5', .5), (25.0, 'B5', .5), (25.5, 'C#5', .5),
+    (27.0, 'D#6', .5), (27.5, 'B6', .5), (28.0, 'D#6', .5), (28.5, 'B6', .5),
+    (29.0, 'E6', .5), (29.5, 'D#6', .5),
 ]
-MEL_B = [
-    ['E5', 'G5', 'B5', 'G5', 'E6', None, 'B5', None],
-    ['A5', None, 'G5', None, 'E5', 'D5', 'E5', None],
-    ['A5', 'B5', 'C6', 'B5', 'A5', 'G5', 'A5', None],
-    ['B5', 'A5', 'G5', 'F#5', 'E5', None, 'E5', None],
-]
-ROOTS = {'A': ['E3', 'E3', 'C3', 'D3'], 'B': ['E3', 'C3', 'D3', 'E3']}
+BASS_BARS = ['G#2', 'G#2', 'G#2', 'G#2', 'G#2', 'G#2', 'C#3', 'D#3']
 
 
 def build_music():
     music_end = (TOTAL / FPS) - 1.3
-    loop_len = 8 * BAR
-    nloops = int(np.ceil((music_end - MUSIC_T0) / loop_len)) + 1
+    nloops = int(np.ceil((music_end - MUSIC_T0) / LOOP)) + 1
     s = 0
     for L in range(nloops):
-        base = MUSIC_T0 + L * loop_len
-        for bi in range(8):
-            part = 'A' if bi < 4 else 'B'
-            mel = (MEL_A if part == 'A' else MEL_B)[bi % 4]
-            bt = base + bi * BAR
-            if bt > music_end:
+        base = MUSIC_T0 + L * LOOP
+        if base > music_end:
+            break
+        for (b, note, dur) in MELODY:
+            t = base + b * BEAT
+            if t >= music_end:
                 break
+            add_note(t, dur * BEAT * 0.9, freq(note), duty=0.5, vol=0.16,
+                     echo=0.22 if dur >= 1 else 0.12)
+        for bi in range(8):
+            fr = freq(BASS_BARS[bi])
             for k in range(8):
-                note = mel[k]
-                if note and bt + k * E8 < music_end:
-                    add_note(bt + k * E8, E8 * 0.92, freq(note),
-                             duty=0.5, vol=0.15, echo=0.22)
-            r = ROOTS[part][bi % 4]
-            fr = freq(r)
-            for k in range(8):
-                f = fr if k % 2 == 0 else fr * 2
-                if bt + k * E8 < music_end:
-                    add_note(bt + k * E8, E8 * 0.48, f,
-                             duty=0.25, vol=0.115)
-            for beat in range(4):
-                tt = bt + beat * 4 * E8
-                if tt >= music_end:
+                t = base + (bi * 8 + k) * E8
+                if t >= music_end:
                     break
-                if beat % 2 == 0:
-                    kick(tt)
-                else:
-                    noise_hit(tt, 0.1, 0.24, decay=0.05, seed=s); s += 1
-                for h in range(4):
-                    noise_hit(tt + h * E8, 0.03, 0.085,
-                              decay=0.018, seed=s); s += 1
+                f = fr if k % 2 == 0 else fr * 2
+                add_note(t, E8 * 0.48, f, duty=0.25, vol=0.115)
+            # rythme zouk : grosse caisse sur TOUS les demi-temps,
+            # caisse claire : frappes 1 et 5 sur les derniers huitiemes des
+            # temps 1 et 3 (anticipation), frappes 2,3,4 et 6,7,8 sur les
+            # quarts de temps (double-croches, contretemps)
+            for k8 in range(8):
+                t = base + (bi * 8 + k8) * E8
+                if t >= music_end:
+                    break
+                kick(t, vol=0.62 if k8 % 2 == 0 else 0.36)
+            SNARE_SLOTS = (2, 5, 6, 7, 10, 13, 14, 15)  # en 16emes de mesure
+            for j, sl in enumerate(SNARE_SLOTS):
+                t = base + (bi * 8) * E8 + sl * E16
+                if t >= music_end:
+                    break
+                if j % 4 == 0:  # frappes 1 et 5 : dernier huitieme du temps
+                    noise_hit(t, 0.11, 0.26, decay=0.05, seed=s); s += 1
+                else:           # quarts de temps (contretemps)
+                    noise_hit(t, 0.045, 0.14, decay=0.028, seed=s); s += 1
+            for h in range(4):  # charley leger sur les contretemps
+                t = base + (bi * 8 + 2 * h + 1) * E8
+                if t >= music_end:
+                    break
+                noise_hit(t, 0.03, 0.085, decay=0.018, seed=s); s += 1
 
 
 def build_sfx():

@@ -63,7 +63,7 @@ for i in range(N_OPS):
         px2 = 135 + (tx2 - 135) * 0.55
         f_impact2 = starts["explode"][0]
         base_impact2 = keeper_base(f_impact2)
-        kd["amp2"] = 54.0 if tx2 >= base_impact2 else -54.0
+        kd["amp2"] = 54.0 if tx2 < base_impact2 else -54.0
         kd["tx2"] = tx2
         kd["px2"] = max(30, min(240, px2))
     else:
