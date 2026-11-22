@@ -10,8 +10,8 @@ feux d'artifice et confettis. Le bandeau **MATHS MONDE** est affiche en
 permanence. Couleurs : #F72585, #7209B7, #3A0CA3, #4361EE, #4CC9F0.
 
 Musique 8-bit a 136 BPM : melodie carree sur partition 8 mesures (Mib6-Si5-Sol#5 ; mib6/si6...
-accordee en Sol# mineur - basse rebond G#2/C#3/D#3, grosse caisse sur tous les temps,
-caisse claire sur les temps 2 et 4)
+accordee en Sol# mineur - basse rebond G#2/C#3/D#3, rythme zouk :
+grosse caisse sur tous les demi-temps, caisse claire sur chaque temps)
 + effets : sifflet, frappe, buzz d'erreur, jingle GOAL + foule, fanfare.
 
 ## Contenu du depot

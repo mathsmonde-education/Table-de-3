@@ -152,16 +152,18 @@ def build_music():
                     break
                 f = fr if k % 2 == 0 else fr * 2
                 add_note(t, E8 * 0.48, f, duty=0.25, vol=0.115)
-            for beat in range(4):
-                tt = base + bi * 8 * E8 + beat * 4 * E8
-                if tt >= music_end:
+            # rythme zouk : grosse caisse sur TOUS les demi-temps,
+            # caisse claire sur chaque temps, charley sur les contretemps
+            for k8 in range(8):
+                t = base + (bi * 8 + k8) * E8
+                if t >= music_end:
                     break
-                kick(tt)
-                if beat % 2 == 1:
-                    noise_hit(tt, 0.1, 0.24, decay=0.05, seed=s); s += 1
-                for h in range(4):
-                    noise_hit(tt + h * E8, 0.03, 0.085,
-                              decay=0.018, seed=s); s += 1
+                onbeat = k8 % 2 == 0
+                kick(t, vol=0.62 if onbeat else 0.36)
+                if onbeat:
+                    noise_hit(t, 0.11, 0.26, decay=0.05, seed=s); s += 1
+                else:
+                    noise_hit(t, 0.03, 0.085, decay=0.018, seed=s); s += 1
 
 
 def build_sfx():

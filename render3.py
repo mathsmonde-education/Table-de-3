@@ -258,10 +258,12 @@ def draw_goal_fx(dr, i, k, tx):
 def draw_result(dr, i, k):
     s = str(3 * (i + 1))
     tw = text_w(s, 3)
-    cx = (GOAL_X1 + GOAL_X2) // 2
+    # resultat ecrit exactement a l'endroit de l'operation (plus haut)
+    cx = (GOAL_X1 + GOAL_X2) // 2 - 6
+    cy = (GOAL_Y1 + GOAL_Y2) // 2
     col = WHITE if (k // 4) % 2 == 0 else TURQ
     bw, bh = tw + 12, 21 + 10
-    x0, y0 = cx - bw // 2, 112 - bh // 2 + 18
+    x0, y0 = cx - bw // 2, cy - bh // 2
     dr.rectangle([x0, y0, x0 + bw, y0 + bh], fill=(12, 10, 46), outline=TURQ)
     draw_text(dr, cx - tw // 2, y0 + 5, s, col, 3, shadow=(0, 40, 40))
     return x0, y0
